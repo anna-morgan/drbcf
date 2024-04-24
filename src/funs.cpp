@@ -1419,21 +1419,35 @@ mat coef_basis(tree& t, xinfo& xi, dinfo& di)
   return(out);
 }
 
-arma::mat coef_basis_i(size_t i, tree& t, xinfo& xi, dinfo& di)
+//arma::mat coef_basis_i(size_t i, tree& t, xinfo& xi, dinfo& di)
+//{
+//  double *xx;
+//  
+//  tree::tree_cp bn;
+//  
+//  arma::mat out(di.basis_dim, 1);
+//  
+//  //for(size_t i=0; i<1; i++) {
+//    xx = di.x + i*di.p;
+//    bn = t.bn(xx,xi);
+//    out.col(0) = bn->getm();
+//  //}
+//  return(out);
+//}
+
+arma::mat coef_basis_i(size_t i, std::vector<tree>& t, xinfo& xi, dinfo& di)
 {
   double *xx;
-  
   tree::tree_cp bn;
-  
   arma::mat out(di.basis_dim, 1);
   
-  //for(size_t i=0; i<1; i++) {
-    xx = di.x + i*di.p;
-    bn = t.bn(xx,xi);
-    out.col(0) = bn->getm();
-  //}
+  xx = di.x + i*di.p;
+  for (size_t j=0; j<t.size(); ++j) {
+    bn = t[j].bn(xx,xi);
+    out.col(0) += bn->getm();  
+  }
   return(out);
-} 
+}
 
 
 //--------------------------------------------------

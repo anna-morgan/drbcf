@@ -45,8 +45,12 @@ List multibart(arma::vec y_,
                  NumericVector basis_params = NumericVector::create(0.0),
                  bool text_trace = true,
                  bool R_trace = false,
-                 bool return_coefs = false)
+                 bool return_coefs = false,
+                 arma::vec ugrid_ = arma::vec())
 {
+  
+  Rcout << "ugrid: " << ugrid_[1] << " " << ugrid_[2] << endl;
+  
   
   //Rcout << paths[0] << endl << paths[1];
   
@@ -119,10 +123,13 @@ List multibart(arma::vec y_,
     double L = 0.;
     double lscale = 0.;
     double sig_omega = 1.;
+    bool update_omega_bool = false;
     if(basis_params.size() > 1){
       nb = basis_params[0];
       L = basis_params[1];
       lscale = basis_params[2];
+      sig_omega = 1.;
+      update_omega_bool = true;
     }
     
     for(size_t i=0; i<num_designs; i++) {
@@ -802,51 +809,50 @@ List multibart(arma::vec y_,
         cuts = current;
       }
       
-      //Rcout << " end cuts" << endl;
-      //
+     // Rcout << " end cuts" << endl;
+
+    //  Rcout << Omega[0](1,1) << " " << Omega[0][1,2] << " " << Omega[0][2,2] << endl;
+      
       // Update Omega
-      //if(TRUE){ // for easy on/off testing
+      if(update_omega_bool){ // turned on if multibart is given a list of parameters for updating omega
         size_t ulength = 200;
         arma::vec ugrid = arma::linspace(-1, 1, ulength); // possible values of u*
         arma::vec ustar(n);
         arma::vec m(ulength);
         std::vector<int> h(n, 0); // vector of integer draws from k
         
-        //Create Omega_grid
-        arma::mat Omega_grid = Omega_update(ugrid, 
+        arma::mat Omega_grid = Omega_update(ugrid_, 
                                             nb, 
                                             L, 
                                             lscale, 
                                             sig_omega);
         for(size_t s=0; s<1; ++s) {
           for(size_t k = 0; k < n; k++) {
-            m.zeros(); 
+            m.zeros();
             r_tree[k] = y[k] - (allfit[k] - allfits[s][k]); // update r_tree residuals for forest s
             
-            for(size_t j=0; j< trees[s].size(); ++j) { // sum m over j trees
-              arma::vec coef = coef_basis_i(k, trees[s][j], x_info[s], di[s]);
-              m += Omega_grid * coef;
-            }
-            arma::vec weights = (-0.5 * arma::square((r_tree[k] - m) / sigma)); // vector of weights for each candidate in u_grid
+            m = Omega_grid * coef_basis_i(k, trees[s], x_info[s], di[s]);
+            arma::vec weights = - 0.5 * arma::square((r_tree[k] - m) / sigma); // vector of weights for each candidate in u_grid
             h[k] = rdisc_log(weights);
-            ustar(k) = ugrid(h[k]);
+            //ustar(k) = ugrid(h[k]);
+            ustar(k) = ugrid_(k);
             
             allfit[k] -= allfits[s][k]; 
-            allfits[s][k] = m[h[k]];
+            allfits[s][k] = m[k];
+            //allfits[s][k] = m[h[k]];
             allfit[k] += allfits[s][k];
           } 
           
+          Rcout << "ustar: " << ustar[1] << " " << ustar[2] << endl;
+          Rcout << "params: " << nb << " " << L << " " << lscale << " " << sig_omega << endl;
           arma::mat Omega_new = Omega_update(ustar, nb, L, lscale, sig_omega);
+          Rcout << "New: " << Omega_new(1,1) << " " << Omega_new[1,2] << " " << Omega_new[2,2] << endl;
           Omega[s] = Omega_new;
-          //for(size_t k = 0; k < n; k++) {
-          //  allfit[k] -= allfits[s][k]; 
-          //  allfits[s][k] = m[h[k]];
-          //  allfit[k] += allfits[s][k];
-          //}
         }
-      //}
+      }
+     // Rcout << Omega[0](1,1) << " " << Omega[0][1,2] << " " << Omega[0][2,2] << endl;
       
-      //Rcout << "Updated Omega" << endl;
+     // Rcout << "Updated Omega" << endl;
       
       if( ((i>=burn) & (i % thin==0)) )  {
         //for(size_t j=0;j<m;j++) treef << t[j] << endl;

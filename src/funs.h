@@ -67,7 +67,8 @@ void s2z_stats(arma::vec &m, //FC of mu is Phi^(-1)m
                arma::colvec &nleaf, 
                pinfo &pi);
 mat coef_basis(tree& t, xinfo& xi, dinfo& di);
-arma::mat coef_basis_i(size_t i, tree& t, xinfo& xi, dinfo& di);
+//arma::mat coef_basis_i(size_t i, tree& t, xinfo& xi, dinfo& di);
+arma::mat coef_basis_i(size_t i, std::vector<tree>& t, xinfo& xi, dinfo& di);
 
 //--------------------------------------------------
 //normal density

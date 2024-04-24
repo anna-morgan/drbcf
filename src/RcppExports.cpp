@@ -107,8 +107,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // multibart
-List multibart(arma::vec y_, List& bart_specs, List& bart_designs, arma::mat random_des, arma::mat random_var, arma::mat random_var_ix, double random_var_df, arma::vec randeff_scales, int burn, int nd, int thin, double lambda, double nu, bool return_trees, bool save_trees, bool est_mod_fits, bool est_con_fits, bool prior_sample, int status_interval, NumericVector lower_bd, NumericVector upper_bd, bool ordinal, NumericVector y_obs, NumericVector cutpoints_init, NumericVector basis_params, bool text_trace, bool R_trace, bool return_coefs);
-RcppExport SEXP _multibart_multibart(SEXP y_SEXP, SEXP bart_specsSEXP, SEXP bart_designsSEXP, SEXP random_desSEXP, SEXP random_varSEXP, SEXP random_var_ixSEXP, SEXP random_var_dfSEXP, SEXP randeff_scalesSEXP, SEXP burnSEXP, SEXP ndSEXP, SEXP thinSEXP, SEXP lambdaSEXP, SEXP nuSEXP, SEXP return_treesSEXP, SEXP save_treesSEXP, SEXP est_mod_fitsSEXP, SEXP est_con_fitsSEXP, SEXP prior_sampleSEXP, SEXP status_intervalSEXP, SEXP lower_bdSEXP, SEXP upper_bdSEXP, SEXP ordinalSEXP, SEXP y_obsSEXP, SEXP cutpoints_initSEXP, SEXP basis_paramsSEXP, SEXP text_traceSEXP, SEXP R_traceSEXP, SEXP return_coefsSEXP) {
+List multibart(arma::vec y_, List& bart_specs, List& bart_designs, arma::mat random_des, arma::mat random_var, arma::mat random_var_ix, double random_var_df, arma::vec randeff_scales, int burn, int nd, int thin, double lambda, double nu, bool return_trees, bool save_trees, bool est_mod_fits, bool est_con_fits, bool prior_sample, int status_interval, NumericVector lower_bd, NumericVector upper_bd, bool ordinal, NumericVector y_obs, NumericVector cutpoints_init, NumericVector basis_params, bool text_trace, bool R_trace, bool return_coefs, arma::vec ugrid_);
+RcppExport SEXP _multibart_multibart(SEXP y_SEXP, SEXP bart_specsSEXP, SEXP bart_designsSEXP, SEXP random_desSEXP, SEXP random_varSEXP, SEXP random_var_ixSEXP, SEXP random_var_dfSEXP, SEXP randeff_scalesSEXP, SEXP burnSEXP, SEXP ndSEXP, SEXP thinSEXP, SEXP lambdaSEXP, SEXP nuSEXP, SEXP return_treesSEXP, SEXP save_treesSEXP, SEXP est_mod_fitsSEXP, SEXP est_con_fitsSEXP, SEXP prior_sampleSEXP, SEXP status_intervalSEXP, SEXP lower_bdSEXP, SEXP upper_bdSEXP, SEXP ordinalSEXP, SEXP y_obsSEXP, SEXP cutpoints_initSEXP, SEXP basis_paramsSEXP, SEXP text_traceSEXP, SEXP R_traceSEXP, SEXP return_coefsSEXP, SEXP ugrid_SEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -140,7 +140,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< bool >::type text_trace(text_traceSEXP);
     Rcpp::traits::input_parameter< bool >::type R_trace(R_traceSEXP);
     Rcpp::traits::input_parameter< bool >::type return_coefs(return_coefsSEXP);
-    rcpp_result_gen = Rcpp::wrap(multibart(y_, bart_specs, bart_designs, random_des, random_var, random_var_ix, random_var_df, randeff_scales, burn, nd, thin, lambda, nu, return_trees, save_trees, est_mod_fits, est_con_fits, prior_sample, status_interval, lower_bd, upper_bd, ordinal, y_obs, cutpoints_init, basis_params, text_trace, R_trace, return_coefs));
+    Rcpp::traits::input_parameter< arma::vec >::type ugrid_(ugrid_SEXP);
+    rcpp_result_gen = Rcpp::wrap(multibart(y_, bart_specs, bart_designs, random_des, random_var, random_var_ix, random_var_df, randeff_scales, burn, nd, thin, lambda, nu, return_trees, save_trees, est_mod_fits, est_con_fits, prior_sample, status_interval, lower_bd, upper_bd, ordinal, y_obs, cutpoints_init, basis_params, text_trace, R_trace, return_coefs, ugrid_));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -173,7 +174,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_multibart_log_post_cuts", (DL_FUNC) &_multibart_log_post_cuts, 3},
     {"_multibart_rgig", (DL_FUNC) &_multibart_rgig, 3},
     {"_multibart_gig_norm", (DL_FUNC) &_multibart_gig_norm, 3},
-    {"_multibart_multibart", (DL_FUNC) &_multibart_multibart, 28},
+    {"_multibart_multibart", (DL_FUNC) &_multibart_multibart, 29},
     {"_multibart_unflatten_test", (DL_FUNC) &_multibart_unflatten_test, 1},
     {"_multibart_unflatten_test_predict", (DL_FUNC) &_multibart_unflatten_test_predict, 2},
     {"_rcpp_module_boot_tree_samples", (DL_FUNC) &_rcpp_module_boot_tree_samples, 0},
