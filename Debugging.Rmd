@@ -6,7 +6,7 @@ output: html_notebook
 Testing!
 
 ```{r}
-plot(cars)
+plot(cars, col = "red")
 ```
 
 Initial commit
