@@ -843,10 +843,10 @@ List multibart(arma::vec y_,
             allfit[k] += allfits[s][k];
           } 
           
-          Rcout << "ustar: " << ustar[1] << " " << ustar[2] << endl;
-          Rcout << "params: " << nb << " " << L << " " << lscale << " " << sig_omega << endl;
+          //Rcout << "ustar: " << ustar[1] << " " << ustar[2] << endl;
+          //Rcout << "params: " << nb << " " << L << " " << lscale << " " << sig_omega << endl;
           arma::mat Omega_new = Omega_update(ustar, nb, L, lscale, sig_omega);
-          Rcout << "New: " << Omega_new(1,1) << " " << Omega_new[1,2] << " " << Omega_new[2,2] << endl;
+          //Rcout << "New: " << Omega_new(1,1) << " " << Omega_new[1,2] << " " << Omega_new[2,2] << endl;
           Omega[s] = Omega_new;
         }
       }
