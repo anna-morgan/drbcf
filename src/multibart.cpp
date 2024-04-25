@@ -759,7 +759,7 @@ List multibart(arma::vec y_,
         prior_info[s].sigma = sigma/fabs(prior_info[s].eta);
       }
       
-      sigma = 0.1;
+      // sigma = 0.1;
       
       //Rcout << "cuts" << endl;
       // update cutpoints
