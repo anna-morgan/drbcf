@@ -12,13 +12,19 @@ editor_options:
 
 - Taking in omega_des with true u's
 - Updating omega and u
-- Directly update rows of omega instead of entire matrix
+
+Troubleshooting:
+1. Directly update rows of omega instead of entire matrix
+  - doesn't work -- omega[s] and omega_new are different dimensions!
+2. Try setting Omega[s] as Omega_new.t()
+  - now sigma is too large and everything looks off
+3. Oops, wasn't updating ustar: take 2
 
 dim(omega_des): 500 rows x 12 cols
 dim(Omega[0]) as initialized: 12 rows x 500 cols (transpose)
 dim(Omega[0]) after multibart update step: nrow 500 ncol 12 (no transpose!)
 
-Step should be:
+Dimensions of each omega matrix should be:
 
 - Omega_des: $\Omega_{n\times nd}$ where $nd$ is the number of basis dimensions
 

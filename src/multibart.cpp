@@ -836,8 +836,8 @@ List multibart(arma::vec y_,
             
             m = Omega_grid * coef_basis_i(k, trees[s], x_info[s], di[s]);
             arma::vec weights = (- 0.5 * arma::square((r_tree[k] - m) / sigma)); // vector of weights for each candidate in u_grid
-            //h[k] = rdisc_log(weights);
-            //ustar(k) = ugrid(h[k]);
+            h[k] = rdisc_log(weights);
+            ustar(k) = ugrid(h[k]);
             
             allfit[k] -= allfits[s][k];
             allfits[s][k] = m[h[k]];
