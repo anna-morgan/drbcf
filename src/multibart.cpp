@@ -815,7 +815,7 @@ List multibart(arma::vec y_,
       
       // Update Omega 
       if(update_omega_bool){ // turned on if multibart is given a list of parameters for updating omega
-        size_t ulength = 100;
+        size_t ulength = 1000;
         arma::vec ugrid = arma::linspace(-1, 1, ulength); // possible values of u*
         arma::vec ustar(n);
         arma::vec m(ulength);
@@ -832,8 +832,20 @@ List multibart(arma::vec y_,
             r_tree[k] = y[k] - (allfit[k] - allfits[s][k]); // update r_tree residuals for forest s
             
             m = Omega_grid * coef_basis_i(k, trees[s], x_info[s], di[s]);
-            arma::vec weights = - 0.5 * arma::square((r_tree[k] - m) / sigma); // vector of weights for each candidate in u_grid
+            arma::vec weights = (- 0.5 * arma::square((r_tree[k] - m) / sigma)); // vector of weights for each candidate in u_grid
+            arma::vec weights2 = 1 / (sqrt(2 * M_PI) * sigma) / 2 * exp(- 0.5 * arma::square((r_tree[k] - m) / sigma)); // vector of weights for each candidate in u_grid
             h[k] = rdisc_log(weights);
+            
+            std::vector<double> weights_d = arma::conv_to < std::vector<double> >::from(weights2);
+            
+            std::mt19937 rng(std::random_device{}());
+            std::discrete_distribution<> dist(weights.begin(), weights.end());
+            
+            int index = dist(rng);
+            //Rcout << k << " index: " << index << endl;
+            //Rcout << k << " h: " << h[k] << endl;
+            //h[k] = index;
+            
             ustar(k) = ugrid(h[k]);
             //ustar(k) = ugrid_(k);
             
