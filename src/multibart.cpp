@@ -815,7 +815,7 @@ List multibart(arma::vec y_,
       
       // Update Omega 
       if(update_omega_bool){ // turned on if multibart is given a list of parameters for updating omega
-        size_t ulength = 1000;
+        size_t ulength = 100;
         arma::vec ugrid = arma::linspace(-1, 1, ulength); // possible values of u*
         arma::vec ustar(n);
         arma::vec m(ulength);
@@ -826,6 +826,9 @@ List multibart(arma::vec y_,
                                             L, 
                                             lscale, 
                                             sig_omega);
+        //Rcout << "ncol 1: " << Omega[0].n_cols << " nrow 1: " << Omega[0].n_rows << endl;
+        //Rcout << "ncol: " << Omega_grid.n_cols << " nrow: " << Omega_grid.n_rows << endl;
+        
         for(size_t s=0; s<1; ++s) {
           for(size_t k = 0; k < n; k++) {
             m.zeros();
@@ -833,36 +836,22 @@ List multibart(arma::vec y_,
             
             m = Omega_grid * coef_basis_i(k, trees[s], x_info[s], di[s]);
             arma::vec weights = (- 0.5 * arma::square((r_tree[k] - m) / sigma)); // vector of weights for each candidate in u_grid
-            arma::vec weights2 = 1 / (sqrt(2 * M_PI) * sigma) / 2 * exp(- 0.5 * arma::square((r_tree[k] - m) / sigma)); // vector of weights for each candidate in u_grid
-            h[k] = rdisc_log(weights);
+            //h[k] = rdisc_log(weights);
+            //ustar(k) = ugrid(h[k]);
             
-            std::vector<double> weights_d = arma::conv_to < std::vector<double> >::from(weights2);
-            
-            std::mt19937 rng(std::random_device{}());
-            std::discrete_distribution<> dist(weights.begin(), weights.end());
-            
-            int index = dist(rng);
-            //Rcout << k << " index: " << index << endl;
-            //Rcout << k << " h: " << h[k] << endl;
-            //h[k] = index;
-            
-            ustar(k) = ugrid(h[k]);
-            //ustar(k) = ugrid_(k);
-            
-            allfit[k] -= allfits[s][k]; 
-            //allfits[s][k] = m[k];
+            allfit[k] -= allfits[s][k];
             allfits[s][k] = m[h[k]];
             allfit[k] += allfits[s][k];
+            //Omega[s].col(k) = (Omega_grid.row(h[k])).t();
           } 
           
-          //Rcout << "ustar: " << ustar[1] << " " << ustar[2] << endl;
-          //Rcout << "params: " << nb << " " << L << " " << lscale << " " << sig_omega << endl;
           arma::mat Omega_new = Omega_update(ustar, nb, L, lscale, sig_omega);
-          //Rcout << "New: " << Omega_new(1,1) << " " << Omega_new[1,2] << " " << Omega_new[2,2] << endl;
-          Omega[s] = Omega_new;
+          Omega[s] = Omega_new.t();
         }
       }
-     // Rcout << Omega[0](1,1) << " " << Omega[0][1,2] << " " << Omega[0][2,2] << endl;
+      
+      //Rcout << "ncol 2: " << Omega[0].n_cols << " nrow 2: " << Omega[0].n_rows << endl;
+      //Rcout << "ncol Omega2: " << Omega[1].n_cols << " nrow Omega2: " << Omega[1].n_rows << endl;
       
      // Rcout << "Updated Omega" << endl;
       

@@ -12,9 +12,27 @@ editor_options:
 
 - Taking in omega_des with true u's
 - Updating omega and u
-- **Changed multibart to sample weights using std::discrete_distribution**
+- Directly update rows of omega instead of entire matrix
 
-## Setup:
+dim(omega_des): 500 rows x 12 cols
+dim(Omega[0]) as initialized: 12 rows x 500 cols (transpose)
+dim(Omega[0]) after multibart update step: nrow 500 ncol 12 (no transpose!)
+
+Step should be:
+
+- Omega_des: $\Omega_{n\times nd}$ where $nd$ is the number of basis dimensions
+
+- Omega[s] = $\Omega'_{nd\times n}$
+
+- Omega_grid = $\Omega_{ugrid \times nd}$
+
+- m = Omega_grid * coef_basis_i() = $\Omega_{ugrid \times 12} \times \beta_{12 \times 1}$
+
+- Omega_new = $\Omega_{n \times nd}$
+
+- Omega[s] = Omega_new.t() = $\Omega'_{nd \times n}$
+
+## Setup
 
 ```{r, echo = FALSE, results = "hide"}
   source("D:/UT Austin/R Projects (D)/DR-BCF/gp_approx_fun.R")
