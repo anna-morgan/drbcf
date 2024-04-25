@@ -8,8 +8,8 @@ editor_options:
 ## Overview:
 
 - Taking in omega_des with true u's
-- Updating fits from trees, but **not** updating $u$ or $Omega$
-  - Omega fixed at initialization
+- Updating omega and u
+- **Fixing sigma = 0.1** in multibart
 
 ## Setup:
 
@@ -139,6 +139,7 @@ ggarrange(p1_xx0, p2_xx0, nrow = 2)
   (u[1:4])
   (omega_des[1:4,1:4])
 ```
+
 ```{r}
  X_list = list(multibart:::mb_modelmatrix(matrix(x0, nrow=n)),
                 multibart:::mb_modelmatrix(matrix(x0, nrow=n)))
@@ -210,7 +211,7 @@ xx <- 1
 
   for(xx in c(1,2)){
 
-  ugrid_length <- 200
+  ugrid_length <- 100
   ugrid <- seq(-1, 1, length.out = ugrid_length)
   omega <- Omega(ugrid, j_con, L)
   scales = sqrt(SDiag(sig, l_con, j_con, L))
@@ -268,14 +269,6 @@ xx <- 1
                                   y = ygrid),
                 aes(ymin = dens05, ymax = dens95, x = y), alpha = 0.3,
                 fill = "firebrick") +
-    #geom_histogram(data = data.frame(yobs = c(colMeans(mbf$yhat_post[bseq,x0==xx]),
-    #                                          y[x0==xx]),
-    #                                 xobs = c(x0[x0==xx],
-    #                                          x0[x0==xx]),
-    #                                 type = c(rep("Predicted Y", sum(x0==xx)),
-    #                                          rep("True Y", sum(x0==xx)))),
-    #               aes(x = yobs, y = after_stat(density), fill = factor(type)),
-    #               alpha = 0.3, position = "identity") +
     geom_line(aes(x = dens, y = y, color = lab), lwd = 1) +
     scale_fill_brewer(palette = "Set1") +
     scale_color_brewer(palette = "Set1")  +
@@ -285,6 +278,7 @@ xx <- 1
 ```
 
 ```{r}
+bseq <- sort(c(1,sample(1:nd, 6),nd))
 xx <- 0
 
   f_fit = list(tree_samples = mbf$tree_trace[[1]],
@@ -293,11 +287,44 @@ xx <- 0
   f = get_forest_fit(f_fit, matrix(xx))#matrix(rep(xx,ugrid_length)), omega_plot_grid[])
 
 plot(ugrid, omega_plot_grid[] %*% f[,,nd])
-par(mfrow = c(2,3))
-for(b in sample(1:nd, 6)){
+par(mfrow = c(2,4))
+for(b in bseq){
   plot(ugrid, omega_plot_grid[] %*% f[,,b])
 }
 ```
+```{r}
+  int_fit = list(tree_samples = mbf$tree_trace[[2]],
+                 str = mbf$tree_trace[[2]]$save_string(),
+                 scale=1, shift = 0)
+  int = get_forest_fit(int_fit, matrix(xx))
+  sigma_post = mbf$sigma
+  
+  ygrid_length <- 1001
+  ygrid <- seq(-5,5,length.out = ygrid_length)
+  
+  ## True density in blue:
+  ns <- 10000
+  us <- runif(ns, min = -1, max = 1)
+  ys <- apply(cbind(us,xx), 1, yfun) +
+    rnorm(ns, mean = 0, sd = sigma0)
+  den <- density(ys)
+
+  ydensobs <- sapply(bseq, ydensfun, f = f, int = int, sigma_post = sigma_post)
+
+data.frame(y = c(c(ydensobs)),
+             dens = c(rep(ygrid,length(bseq))),
+             lab = c(rep(paste0("Predicted B = ", bseq), each = ygrid_length))) %>%
+    ggplot() +
+    geom_line(data = data.frame(y = den$y, 
+                         dens = den$x, 
+                         lab = rep("True", length(den$x))),
+              aes(x = dens, y = y), alpha = 0.5, lwd = 2, color = "black") +
+    geom_line(aes(x = dens, y = y, color = lab), lwd = 1) +
+    scale_fill_brewer(palette = "PuRd") +
+    scale_color_brewer(palette = "PuRd")  +
+    ggtitle(paste0("Conditional density given xx = ",xx))
+```
+
 ```{r}
 xx <- 2
 
@@ -307,9 +334,41 @@ xx <- 2
   f = get_forest_fit(f_fit, matrix(xx))#matrix(rep(xx,ugrid_length)), omega_plot_grid[])
 
 plot(ugrid, omega_plot_grid[] %*% f[,,nd])
-par(mfrow = c(2,3))
-for(b in sample(1:nd, 6)){
+par(mfrow = c(2,4))
+for(b in bseq){
   plot(ugrid, omega_plot_grid[] %*% f[,,b])
 }
 ```
+
+
+```{r}
+  int_fit = list(tree_samples = mbf$tree_trace[[2]],
+                 str = mbf$tree_trace[[2]]$save_string(),
+                 scale=1, shift = 0)
+  int = get_forest_fit(int_fit, matrix(xx))
+  sigma_post = mbf$sigma
+  
+  ## True density in blue:
+  ns <- 10000
+  us <- runif(ns, min = -1, max = 1)
+  ys <- apply(cbind(us,xx), 1, yfun) +
+    rnorm(ns, mean = 0, sd = sigma0)
+  den <- density(ys)
+
+  ydensobs <- sapply(bseq, ydensfun, f = f, int = int, sigma_post = sigma_post)
+
+data.frame(y = c(c(ydensobs)),
+             dens = c(rep(ygrid,length(bseq))),
+             lab = c(rep(paste0("Predicted B = ", bseq), each = ygrid_length))) %>%
+    ggplot() +
+    geom_line(data = data.frame(y = den$y, 
+                         dens = den$x, 
+                         lab = rep("True", length(den$x))),
+              aes(x = dens, y = y), alpha = 0.5, lwd = 2, color = "black") +
+    geom_line(aes(x = dens, y = y, color = lab), lwd = 1) +
+    scale_fill_brewer(palette = "PuRd") +
+    scale_color_brewer(palette = "PuRd")  +
+    ggtitle(paste0("Conditional density given xx = ",xx))
+```
+
 

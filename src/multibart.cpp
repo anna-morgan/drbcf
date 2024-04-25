@@ -759,7 +759,7 @@ List multibart(arma::vec y_,
         prior_info[s].sigma = sigma/fabs(prior_info[s].eta);
       }
       
-      //sigma = 0.2;
+      sigma = 0.1;
       
       //Rcout << "cuts" << endl;
       // update cutpoints
@@ -813,15 +813,15 @@ List multibart(arma::vec y_,
 
     //  Rcout << Omega[0](1,1) << " " << Omega[0][1,2] << " " << Omega[0][2,2] << endl;
       
-      // Update Omega
+      // Update Omega 
       if(update_omega_bool){ // turned on if multibart is given a list of parameters for updating omega
-        size_t ulength = 200;
+        size_t ulength = 100;
         arma::vec ugrid = arma::linspace(-1, 1, ulength); // possible values of u*
         arma::vec ustar(n);
         arma::vec m(ulength);
         std::vector<int> h(n, 0); // vector of integer draws from k
         
-        arma::mat Omega_grid = Omega_update(ugrid_, 
+        arma::mat Omega_grid = Omega_update(ugrid, 
                                             nb, 
                                             L, 
                                             lscale, 
@@ -834,12 +834,12 @@ List multibart(arma::vec y_,
             m = Omega_grid * coef_basis_i(k, trees[s], x_info[s], di[s]);
             arma::vec weights = - 0.5 * arma::square((r_tree[k] - m) / sigma); // vector of weights for each candidate in u_grid
             h[k] = rdisc_log(weights);
-            //ustar(k) = ugrid(h[k]);
-            ustar(k) = ugrid_(k);
+            ustar(k) = ugrid(h[k]);
+            //ustar(k) = ugrid_(k);
             
             allfit[k] -= allfits[s][k]; 
-            allfits[s][k] = m[k];
-            //allfits[s][k] = m[h[k]];
+            //allfits[s][k] = m[k];
+            allfits[s][k] = m[h[k]];
             allfit[k] += allfits[s][k];
           } 
           
