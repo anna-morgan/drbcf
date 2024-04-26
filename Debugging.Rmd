@@ -21,6 +21,7 @@ Troubleshooting:
 3. Oops, wasn't updating ustar: take 2
 4. Looking good! Let's try a harder problem
   - Turn up sigma0, change back dgp so modes are less separated
+  - Try on Orlandi dgp, n = 500, nd = 1500
 
 dim(omega_des): 500 rows x 12 cols
 dim(Omega[0]) as initialized: 12 rows x 500 cols (transpose)
@@ -203,7 +204,7 @@ ggarrange(p1_xx0, p2_xx0, p3_xx0, nrow = 3)
   ustar = runif(n, -1, 1)
 
   j_con <- 12 # basis dim of approx
-  l_con <- 1/(8*pi)
+  l_con <- 1/(2*pi)
 
   sig <- 1 # the scale is handled separately
 
@@ -245,8 +246,8 @@ ggarrange(p1_xx0, p2_xx0, p3_xx0, nrow = 3)
   qchi = qchisq(1.0-sigq,nu)
   lambda = (sighat*sighat*qchi)/nu
 
-  nd = 1000
-  nburn = 1000
+  nd = 1500
+  nburn = 1500
   thin = 1
   set.seed(2023)
 ```
