@@ -45,12 +45,8 @@ List multibart(arma::vec y_,
                  NumericVector basis_params = NumericVector::create(0.0),
                  bool text_trace = true,
                  bool R_trace = false,
-                 bool return_coefs = false,
-                 arma::vec ugrid_ = arma::vec())
+                 bool return_coefs = false)
 {
-  
-  Rcout << "ugrid: " << ugrid_[1] << " " << ugrid_[2] << endl;
-  
   
   //Rcout << paths[0] << endl << paths[1];
   

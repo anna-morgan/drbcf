@@ -19,6 +19,8 @@ Troubleshooting:
 2. Try setting Omega[s] as Omega_new.t()
   - now sigma is too large and everything looks off
 3. Oops, wasn't updating ustar: take 2
+4. Looking good! Let's try a harder problem
+  - Turn up sigma0, change back dgp so modes are less separated
 
 dim(omega_des): 500 rows x 12 cols
 dim(Omega[0]) as initialized: 12 rows x 500 cols (transpose)
@@ -52,21 +54,21 @@ Dimensions of each omega matrix should be:
 
 ## DGP
 
-```{r, results = "show"}
+```{r, results = "show", eval = FALSE}
   set.seed(2024)
   n <- 500
   u <- runif(n, -1, 1)
   x0 <- round(rnorm(n, 0, 2), 0)
   xnull <- rnorm(n, 0, 1)
   a <- 1.5
-  sigma0 <- 0.1
+  sigma0 <- 0.5
 
   ufun <- function(vec){
     u = vec[1]
     x = vec[2]
     if(x < a){
-      b <- 2 / (1 + exp(-100*(u))) + 0.01
-      c <- 0#0.4 / (1 + exp(-15*(u-0.4))) + 0.01
+      b <- 2 / (1 + exp(-10*(u))) + 0.01
+      c <- 0.4 / (1 + exp(-15*(u-0.4))) + 0.01
       return(1 * (b + c))
     } else{
       return(1)
@@ -109,14 +111,52 @@ p2_y <- ggplot(data.frame(x0 = x0, y = y)) +
   ggarrange(p1_y, p2_y, nrow = 2)
 ```
 
+```{r, results = "show", eval = TRUE}
+  # Simulate data from a covariate dependent mixture of a normal and a log gamma
+  gamma_shape <- function(x) 0.5 + x ^ 2
+  m <- function(x) 1 + 2 * (x - 0.8)
+  p <- function(x) exp(-10 * (x - 0.8) ^ 2)
+  mu0 <- function(x) {
+    return(5 * exp(15 * (x - 0.5)) / (1 + exp(15 * (x - 0.5))) - 4 * x)
+  }
+
+  yfun <- function(x) {
+    n <- length(x)
+    z <- rbinom(n, 1, p(x))
+    return(z * rnorm(n, m(x), 0.3) +
+             (1 - z) * log(rgamma(n, gamma_shape(x), 1)) + mu0(x))
+  }
+
+  sigma0 <- 0.4
+  n <- 1000
+  x <- runif(n)
+  y <- yfun(x)
+
+p1_y <- ggplot(data.frame(x0 = x, y = yfun(x))) +
+    geom_histogram(aes(x = y), 
+                   position = "identity", alpha = 0.8) +
+    ggtitle("Y by X, without noise")
+  sd(yfun(x))
+
+  y <- yfun(x) + rnorm(n, 0, sigma0)
+  yobs_range = c(min(y), max(y))
+  
+p2_y <- ggplot(data.frame(x0 = x, y = y)) +
+    geom_histogram(aes(x = y), 
+                   position = "identity", alpha = 0.8) +
+    ggtitle("Y by X, including noise from sigma0")
+  sd(y)
+  
+  ggarrange(p1_y, p2_y, nrow = 2)
+```
+
 True density of y above and below threshold:
 
 ```{r}
-xx = 2
+ns <- 10000
+xx = rep(0.1, ns)
   ## True density in blue:
-  ns <- 100000
-  us <- runif(ns, min = -1, max = 1)
-  ys <- apply(cbind(us,xx), 1, yfun) +
+  ys <- yfun(xx) +
     rnorm(ns, mean = 0, sd = sigma0)
   den <- density(ys)
 
@@ -125,13 +165,11 @@ p1_xx0 <- data.frame(y_ = den$y,
     ggplot(aes(y = y_, x = dens)) +
     geom_line() +
   ggtitle(paste0("True y density, x0 = ", xx)) +
-  expand_limits(x = c(-2,4))
+  expand_limits(x = c(-10,5), y = c(0, 0.8))
   
-xx = 0
+xx = rep(0.5, ns)
   ## True density in blue:
-  ns <- 100000
-  us <- runif(ns, min = -1, max = 1)
-  ys <- apply(cbind(us,xx), 1, yfun) +
+  ys <- yfun(xx) +
     rnorm(ns, mean = 0, sd = sigma0)
   den <- density(ys)
 
@@ -140,9 +178,22 @@ p2_xx0 <- data.frame(y_ = den$y,
     ggplot(aes(y = y_, x = dens)) +
     geom_line() +
   ggtitle(paste0("True y density, x0 = ", xx)) +
-  expand_limits(x = c(-2,4))
+  expand_limits(x = c(-10,5), y = c(0, 0.8))
 
-ggarrange(p1_xx0, p2_xx0, nrow = 2)
+xx = rep(0.8, ns)
+  ## True density in blue:
+  ys <- yfun(xx) +
+    rnorm(ns, mean = 0, sd = sigma0)
+  den <- density(ys)
+
+p3_xx0 <- data.frame(y_ = den$y,
+             dens = den$x) %>%
+    ggplot(aes(y = y_, x = dens)) +
+    geom_line() +
+  ggtitle(paste0("True y density, x0 = ", xx)) +
+  expand_limits(x = c(-10,5), y = c(0, 0.8))
+
+ggarrange(p1_xx0, p2_xx0, p3_xx0, nrow = 3)
 ```
 
 ## Initialize omega, multibart function
@@ -159,18 +210,17 @@ ggarrange(p1_xx0, p2_xx0, nrow = 2)
   #Build the matrices
   scales = sqrt(SDiag(sig, l_con, j_con, L))
 
-  #omega <- Omega(ustar, j_con, L)
-  omega <- Omega(u, j_con, L) # USING TRUE U
+  omega <- Omega(ustar, j_con, L)
+  #omega <- Omega(u, j_con, L) # USING TRUE U
   # Hit with root eigenvalues
   omega_des <- omega %*% scales
   
-  (u[1:4])
   (omega_des[1:4,1:4])
 ```
 
 ```{r}
- X_list = list(multibart:::mb_modelmatrix(matrix(x0, nrow=n)),
-                multibart:::mb_modelmatrix(matrix(x0, nrow=n)))
+ X_list = list(multibart:::mb_modelmatrix(matrix(x, nrow=n)),
+                multibart:::mb_modelmatrix(matrix(x, nrow=n)))
 
   basis_matrix_list = list(omega_des, matrix(rep(1,n),nrow=n)) # initialize at constant u
 
@@ -190,7 +240,7 @@ ggarrange(p1_xx0, p2_xx0, nrow = 2)
 
   sigq = 0.9
   nu = 3
-  lmf = lm(y~x0)
+  lmf = lm(y~x)
   sighat = summary(lmf)$sigma
   qchi = qchisq(1.0-sigq,nu)
   lambda = (sighat*sighat*qchi)/nu
@@ -215,15 +265,14 @@ ggarrange(p1_xx0, p2_xx0, nrow = 2)
                               status_interval = 100,
                               basis_params = c(j_con, L, l_con),
                               text_trace = TRUE,
-                              R_trace = FALSE,
-                              ugrid_ = u)
+                              R_trace = FALSE)
 ```
 
 ```{r}
   data.frame(y_post = colMeans(mbf$yhat_post),
              y_true = y,
              x = x) %>%
-    ggplot(aes(x = y_post, y = y_true, color = factor(x0 < a))) +
+    ggplot(aes(x = y_post, y = y_true)) +
     geom_point() +
     geom_abline(intercept = 0, slope = 1)
 
@@ -237,7 +286,7 @@ Plotting True vs Estimated Density:
 ```{r}
 xx <- 1
 
-  for(xx in c(1,2)){
+  for(xx in c(0.1,0.5,0.8)){
 
   ugrid_length <- 100
   ugrid <- seq(-1, 1, length.out = ugrid_length)
@@ -279,7 +328,7 @@ xx <- 1
   ## True density in blue:
   ns <- 10000
   us <- runif(ns, min = -1, max = 1)
-  ys <- apply(cbind(us,xx), 1, yfun) +
+  ys <- yfun(rep(xx, ns)) +
     rnorm(ns, mean = 0, sd = sigma0)
   den <- density(ys)
 
@@ -287,7 +336,7 @@ xx <- 1
   #bseq <- (nd-20):(nd-15)#(nd-5):nd
   ydensobs <- sapply(bseq, ydensfun, f = f, int = int, sigma_post = sigma_post)
 
-  p <- data.frame(y = c(rowMeans(ydensobs), den$y),
+  p1 <- data.frame(y = c(rowMeans(ydensobs), den$y),
              dens = c(ygrid, den$x),
              lab = c(rep("Predicted", ygrid_length),
                      rep("True", length(den$x)))) %>%
@@ -301,13 +350,13 @@ xx <- 1
     scale_fill_brewer(palette = "Set1") +
     scale_color_brewer(palette = "Set1")  +
     ggtitle(paste0("Conditional density given xx = ",xx))
-  print(p)
+  print(p1)
   }
 ```
 
 ```{r}
 bseq <- sort(c(1,sample(1:nd, 6),nd))
-xx <- 0
+xx <- 0.1
 
   f_fit = list(tree_samples = mbf$tree_trace[[1]],
                str = mbf$tree_trace[[1]]$save_string(),
@@ -333,7 +382,7 @@ for(b in bseq){
   ## True density in blue:
   ns <- 10000
   us <- runif(ns, min = -1, max = 1)
-  ys <- apply(cbind(us,xx), 1, yfun) +
+  ys <- yfun(rep(xx,ns)) +
     rnorm(ns, mean = 0, sd = sigma0)
   den <- density(ys)
 
@@ -354,7 +403,7 @@ data.frame(y = c(c(ydensobs)),
 ```
 
 ```{r}
-xx <- 2
+xx <- 0.8
 
   f_fit = list(tree_samples = mbf$tree_trace[[1]],
                str = mbf$tree_trace[[1]]$save_string(),
@@ -379,7 +428,7 @@ for(b in bseq){
   ## True density in blue:
   ns <- 10000
   us <- runif(ns, min = -1, max = 1)
-  ys <- apply(cbind(us,xx), 1, yfun) +
+  ys <- yfun(rep(xx,ns)) +
     rnorm(ns, mean = 0, sd = sigma0)
   den <- density(ys)
 
