@@ -1,7 +1,7 @@
-# multibart R Package
+# Density Regression BCF
 
 ## About
-Implements a variety of BART models using a regression on basis functions in the leaves.
+Implements a BCF density regression model using approximate targeted smoothing priors (Starling et al., 2020) on latent distributional parameters.
 
 ## Documentation
 
